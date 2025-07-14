@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DSA PDF Chat Assistant</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f2f2f2;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      background: white;
+      margin: auto;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    input[type="file"],
+    input[type="text"],
+    button {
+      width: 100%;
+      margin-top: 10px;
+      padding: 10px;
+      font-size: 16px;
+    }
+    .response {
+      margin-top: 20px;
+      background: #f9f9f9;
+      padding: 10px;
+      border-radius: 5px;
+      white-space: pre-wrap;
+    }
+    .loading {
+      color: green;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>DSA PDF Chat Assistant</h1>
+    <input type="file" id="pdfFile" />
+    <button onclick="uploadPdf()">Upload & Process</button>
+    <br />
+    <input type="text" id="questionInput" placeholder="Type your question..." />
+    <button onclick="askQuestion()">Send</button>
+    <div class="loading" id="loading"></div>
+    <div class="response" id="response"></div>
+  </div>
+
+  <script>
+    const backendUrl = "http://localhost:8000";
+
+    function uploadPdf() {
+      const fileInput = document.getElementById("pdfFile");
+      const loading = document.getElementById("loading");
+      const responseDiv = document.getElementById("response");
+
+      if (fileInput.files.length === 0) {
+        alert("Please select a PDF file.");
+        return;
+      }
+
+      const file = fileInput.files[0];
+      const formData = new FormData();
+      formData.append("file", file);
+
+      loading.textContent = "Uploading and processing PDF...";
+
+      fetch(`${backendUrl}/upload_pdf`, {
+        method: "POST",
+        body: formData
+      })
+      .then((res) => res.json())
+      .then((data) => {
+        loading.textContent = "";
+        responseDiv.textContent = data.message;
+      })
+      .catch((error) => {
+        loading.textContent = "";
+        responseDiv.textContent = "Error uploading PDF: " + error;
+      });
+    }
+
+    function askQuestion() {
+      const question = document.getElementById("questionInput").value;
+      const loading = document.getElementById("loading");
+      const responseDiv = document.getElementById("response");
+
+      if (!question) {
+        alert("Please type a question.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("question", question);
+
+      loading.textContent = "Thinking...";
+
+      fetch(`${backendUrl}/ask`, {
+        method: "POST",
+        body: formData
+      })
+      .then((res) => res.json())
+      .then((data) => {
+        loading.textContent = "";
+        responseDiv.textContent = data.answer;
+      })
+      .catch((error) => {
+        loading.textContent = "";
+        responseDiv.textContent = "Error fetching answer: " + error;
+      });
+    }
+  </script>
+</body>
+</html>
